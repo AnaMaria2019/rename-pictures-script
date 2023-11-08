@@ -5,11 +5,12 @@ HOW TO RUN THE SCRIPT (from PowerShell app):
     .\parametrized-script-for-renumbering-photos.ps1 -path D:\1_Ana\1_Poze\rename-pictures-script\test-images\ -basename 'Noiembrie_' -newbasename 'noiembrie-' -photosNameRegex '\D(\d+).+'
 #>
 
-# Different regex I had to use depending on the initial name of the images files
+# Different regex patterns I had to use depending on the initial name of the images files:
 # \D+\d+-(\d+).+ - matches 'FMI_31072022-407' this pattern (encountered in 2022_Absolvire_Master\Poze_Fotografi\Aparat_Alex_Vlase\)
 #                  wraps in a group only the digits that come after '-' (in this example, 407)
 # 1E0A(\d+).+    - matching '1E0A00356.jpg' (encountered in 2022_Absolvire_Master\Poze_Fotografi\Aparat_Siluk)
 # \d+_(\d+).+    - matching '20221003_114525.jpg', wraps in a group only the digits that come after '_' (in this example, 114525)
+#                  (carefull - this regex works only for images taken on one day)
 # \D+(\d+).+     - matching any name that starts with any non-digits characters and ends with one or more digit characters, wraps
 #                  in a group only the ending digit characters (one example of string, 'mallorca-112.jpg', the group is 112)
 
@@ -51,16 +52,16 @@ if (0 -ne $startingNr) {
 }
 
 $numerical = {
-    if ($_.name -match '\D+(\d+).+') {
-        [int]($_.name -replace '\D+(\d+).+', '$1')
+    if ($_.name -match $photosNameRegex) {
+        [int]($_.name -replace $photosNameRegex, '$1')
     } else {
         $_.name
     }
 }
 
 $check = {
-    if($_.name -match '\D+(\d+).+') {
-        $nr = [int]($_.name -replace '\D+(\d+).+', '$1')
+    if($_.name -match $photosNameRegex) {
+        $nr = [int]($_.name -replace $photosNameRegex, '$1')
         return $nr -ge $start -and $nr -le $end
     }
 }
@@ -87,8 +88,7 @@ if ($startingNr -ne 0) {
     $newPhotoNameNr = $startingNr
 } elseif (0 -ne $addValue) {
     $newPhotoNameNr = [int]($fisiere[0].name -Replace '\D+(\d+).+', '$1') + $addValue
-} 
-else {
+} else {
     $newPhotoNameNr = 1
 }
 
